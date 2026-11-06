@@ -1,4 +1,4 @@
-# HarmoniaSynth — F0-conditioned singing voice head for HarmoniaCodec
+Copyright © 2026 Lewis James Seals Jr. All rights reserved. THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.# HarmoniaSynth — F0-conditioned singing voice head for HarmoniaCodec
 
 **Status: scaffold only.**  
 The underlying HarmoniaCodec ships **no trained weights**.  
