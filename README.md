@@ -1,4 +1,9 @@
 # HarmoniaCodec Music
+
+<p align="center">
+  <img src="img/Music.png" alt="Music" width="300">
+</p>
+
 ## A research-grade singing-voice synthesis and audio-codec project
 
 **HarmoniaCodec Music explores a codec-conditioned path from phonetic and expressive controls to synthesized singing audio.** It combines a NumPy reference codec, an optional PyTorch training stack, an F0-conditioned synthesis head, and a verification-first development workflow.
