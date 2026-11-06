@@ -115,6 +115,16 @@ python tools/model_status.py
 
 If a failure remains, record the failing kernel/stride/dilation/chunk tuple, expected and actual output lengths, and maximum absolute error. Keep non-causal decoding as the supported path until those gates pass.
 
+## Legacy decoder source (archival)
+
+The original failing causal transposed-convolution implementation is preserved at
+[src/legacy/causal_transposed_conv_legacy.py](src/legacy/causal_transposed_conv_legacy.py).
+It is retained for forensic comparison only and is not imported by the active model.
+The implementation replays cached latent frames and applies a fixed right-side crop,
+which can re-emit overlap and produce incorrect chunk lengths. The candidate
+overlap-add implementation remains in harmonia_neural.py and is not considered
+verified until the decoder streaming-equivalence tests pass.
+
 ## Research and validation roadmap
 
 1. **Resolve codec training blockers** — fix and test the known neural loss-shape and missing-WavLM guard issues before a real training run.
