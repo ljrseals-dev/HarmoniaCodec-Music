@@ -1,7 +1,7 @@
 # HarmoniaCodec Music
 
 <p align="center">
-  <img src="img/Music.png" alt="Music" width="300">
+  <img src="img/harmonia-music-hero.svg" alt="HarmoniaCodec Music — phoneme-to-waveform audio research visualization" width="100%">
 </p>
 
 ## A research-grade singing-voice synthesis and audio-codec project
@@ -44,7 +44,7 @@ The music path conditions synthesis on phonetic content, fundamental frequency, 
 | PyTorch codec stack | Trainable encoder/decoder and supporting neural components | Training path exists; real training and perceptual quality are not established |
 | Singing synthesis head | Predict codec latents from phoneme, F0, voicing, and loudness features | Requires training; no trained weights ship |
 | Alignment and F0 | Produce phoneme and pitch features | External dependencies; not bundled |
-| Streaming decoder | Causal/chunked rendering | **Blocked:** causal transposed-convolution streaming fails its tests |
+| Streaming decoder | Causal/chunked rendering | **Pending verification:** a chunk-overlap state fix is proposed on the `fix/causal-transposed-conv-streaming` branch; it is not yet declared fixed |
 | Benchmark harness | Compare supported classical codecs using real local encoder subprocesses | Classical codec measurements are documented; HarmoniaCodec is not yet a trained competitor row |
 
 Run `python tools/model_status.py` for the machine-readable component status summarized for humans. Presence of source code or a checkpoint file alone is not proof of model quality.
@@ -90,6 +90,29 @@ python harmonia_neural.py train --dry-run
 ```
 
 The dry-run is a pipeline smoke exercise, not evidence of convergence or perceptual quality. Read [TRAINING.md](TRAINING.md) before attempting a real training run. The guide specifies rights-cleared data, external feature extraction, training order, and acceptance gates.
+
+## Causal streaming decoder: current diagnosis
+
+The previous `CausalTransposedConv1d` implementation retained earlier latent frames, concatenated them to each new chunk, ran the transposed convolution again, and removed a fixed number of samples from the right. That strategy does not remove the already-emitted overlap at the *left* edge of the new chunk. It therefore re-emits samples, while the fixed right trim also produces the wrong per-chunk output length.
+
+The candidate repair replaces latent-frame replay with **output-domain overlap-add**:
+
+- Each new latent frame contributes exactly `stride` newly emitted samples.
+- The not-yet-emitted convolution tail is retained as state and added to the next chunk's prefix.
+- Convolution bias is applied after overlap accumulation, so overlap regions do not receive the bias twice.
+- `reset()` clears the pending overlap state.
+- The registered convolution weight and bias names are retained for checkpoint compatibility.
+
+**Verification status: pending.** The change is committed to the troubleshooting branch, but this environment could not clone the repository or execute PyTorch tests. Do not mark the streaming decoder production-ready until `test_streaming_equivalence.py` and `test_causal_streaming.py` pass on the branch, including the full decoder test and irregular chunk boundaries. The existing tests are the acceptance gate; this documentation does not claim a pass.
+
+Suggested local verification:
+
+```bash
+python -m pytest -q test_streaming_equivalence.py test_causal_streaming.py
+python tools/model_status.py
+```
+
+If a failure remains, record the failing kernel/stride/dilation/chunk tuple, expected and actual output lengths, and maximum absolute error. Keep non-causal decoding as the supported path until those gates pass.
 
 ## Research and validation roadmap
 
