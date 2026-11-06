@@ -152,26 +152,69 @@ class CausalConv1d(nn.Module):
 
 
 class CausalTransposedConv1d(nn.Module):
+    """
+    Causal streaming ConvTranspose1d with overlap-add state.
+
+    Each latent frame contributes a finite output kernel. Adjacent frames
+    overlap, including across input chunk boundaries. Re-running the previous
+    latent frames and trimming a fixed number of samples re-emits that overlap
+    and also changes the output length. Instead, retain the un-emitted output
+    tail, add it to the next chunk's prefix, and emit exactly stride samples
+    per new latent frame.
+
+    The output is the ordinary transposed-convolution result cropped to
+    input_length * stride. Bias is applied after overlap-add so it is added
+    once per output sample, not once per overlapping chunk.
+    """
     def __init__(self, in_ch, out_ch, kernel, stride, dilation=1, groups=1):
         super().__init__()
+        if kernel < 1 or stride < 1 or dilation < 1:
+            raise ValueError("kernel, stride, and dilation must be positive")
         self.kernel, self.stride, self.dilation = kernel, stride, dilation
-        self.pad = (kernel - 1) * dilation
         self.conv = nn.ConvTranspose1d(in_ch, out_ch, kernel, stride=stride,
                                        dilation=dilation, groups=groups)
-        self._state: Optional[torch.Tensor] = None
-        self._state_len = max(0, (self.kernel - 1 + stride - 1) // stride)
+        self._overlap: Optional[torch.Tensor] = None
+        self._overlap_len = max(0, (kernel - 1) * dilation + 1 - stride)
 
-    def reset(self): self._state = None
+    def reset(self):
+        self._overlap = None
 
     def forward(self, x):
-        if self._state is not None:
-            x = torch.cat([self._state, x], dim=-1)
-        y = self.conv(x)
-        if self.pad:
-            y = y[..., :-self.pad]
-        if self._state_len > 0:
-            self._state = x[..., -self._state_len:].detach()
-        return y
+        if x.ndim != 3:
+            raise ValueError(f"expected (batch, channels, time), got {tuple(x.shape)}")
+        n_frames = x.shape[-1]
+        if n_frames == 0:
+            return x.new_zeros(x.shape[0], self.conv.out_channels, 0)
+
+        # Keep the module's registered weight/bias names for checkpoint
+        # compatibility, but separate bias from the overlap accumulation.
+        y = F.conv_transpose1d(
+            x, self.conv.weight, bias=None, stride=self.conv.stride,
+            padding=self.conv.padding, output_padding=self.conv.output_padding,
+            groups=self.conv.groups, dilation=self.conv.dilation
+        )
+
+        if self._overlap is not None:
+            n = min(self._overlap.shape[-1], y.shape[-1])
+            y = y.clone()
+            y[..., :n] = y[..., :n] + self._overlap[..., :n]
+
+        emit_len = n_frames * self.stride
+        if y.shape[-1] < emit_len:
+            y = F.pad(y, (0, emit_len - y.shape[-1]))
+        emitted = y[..., :emit_len]
+
+        if self._overlap_len:
+            tail = y[..., emit_len:emit_len + self._overlap_len]
+            if tail.shape[-1] < self._overlap_len:
+                tail = F.pad(tail, (0, self._overlap_len - tail.shape[-1]))
+            self._overlap = tail.detach()
+        else:
+            self._overlap = None
+
+        if self.conv.bias is not None:
+            emitted = emitted + self.conv.bias.view(1, -1, 1)
+        return emitted
 
 
 class ResidualUnit(nn.Module):
