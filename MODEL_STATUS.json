@@ -76,7 +76,7 @@
       "kind": "code_fix",
       "required_for": [],
       "fixed": false,
-      "note": "Candidate output-overlap-add repair committed on fix/causal-transposed-conv-streaming. fixed remains false until test_streaming_equivalence.py and test_causal_streaming.py pass on the branch."
+      "note": "Candidate output-overlap-add repair committed on fix/causal-transposed-conv-streaming. fixed remains false until test_streaming_equivalence.py (including the full decoder test) passes on the branch. test_causal_streaming.py covers CausalConv1d, not the transposed-convolution decoder."
     },
     {
       "id": "neural_codec_full",
