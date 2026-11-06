@@ -1,8 +1,6 @@
 # HarmoniaCodec Music
 ## A research-grade singing-voice synthesis and audio-codec project
 
-![HarmoniaCodec Music — abstract audio-science artwork](https://raw.githubusercontent.com/ljrseals-dev/HarmoniaCodec-Music/main/images/harmonia-music-hero.png)
-
 **HarmoniaCodec Music explores a codec-conditioned path from phonetic and expressive controls to synthesized singing audio.** It combines a NumPy reference codec, an optional PyTorch training stack, an F0-conditioned synthesis head, and a verification-first development workflow.
 
 > **Research status — not a production streaming service.** This repository currently ships no trained codec or synthesis weights, no listening-test results, and no production-ready streaming decoder. The causal decoder is explicitly blocked by streaming tests. Treat the project as an active research scaffold, not a finished commercial music platform.
