@@ -8,7 +8,7 @@
 
 **HarmoniaCodec Music explores a codec-conditioned path from phonetic and expressive controls to synthesized singing audio.** It combines a NumPy reference codec, an optional PyTorch training stack, an F0-conditioned synthesis head, and a verification-first development workflow.
 
-> **Research status — not a production streaming service.** This repository currently ships no trained codec or synthesis weights, no listening-test results, and no production-ready streaming decoder. The causal decoder is explicitly blocked by streaming tests. Treat the project as an active research scaffold, not a finished commercial music platform.
+> **Research status — not a production streaming service.** This repository currently ships no trained codec or synthesis weights, no listening-test results, and no production-ready streaming decoder. The causal decoder has a proposed overlap-add repair awaiting PyTorch streaming-equivalence verification. Treat the project as an active research scaffold, not a finished commercial music platform.
 
 [Core codec README](README.md) · [Music synthesis overview](README_MUSIC.md) · [Training guide](TRAINING.md) · [Model status](MODEL_STATUS.json) · [Responsible use](RESPONSIBLE_USE.md)
 
@@ -103,12 +103,13 @@ The candidate repair replaces latent-frame replay with **output-domain overlap-a
 - `reset()` clears the pending overlap state.
 - The registered convolution weight and bias names are retained for checkpoint compatibility.
 
-**Verification status: pending.** The change is committed to the troubleshooting branch, but this environment could not clone the repository or execute PyTorch tests. Do not mark the streaming decoder production-ready until `test_streaming_equivalence.py` and `test_causal_streaming.py` pass on the branch, including the full decoder test and irregular chunk boundaries. The existing tests are the acceptance gate; this documentation does not claim a pass.
+**Verification status: pending.** The change is committed to the troubleshooting branch, but this environment could not clone the repository or execute PyTorch tests. Do not mark the streaming decoder production-ready until `test_streaming_equivalence.py` passes on the branch, including the full decoder test and irregular chunk boundaries. `test_causal_streaming.py` is a separate causal-Conv1d regression suite; it does not exercise the transposed-convolution decoder. The existing tests are the acceptance gate; this documentation does not claim a pass.
 
 Suggested local verification:
 
 ```bash
-python -m pytest -q test_streaming_equivalence.py test_causal_streaming.py
+python -m pytest -q test_streaming_equivalence.py
+python test_causal_streaming.py
 python tools/model_status.py
 ```
 
