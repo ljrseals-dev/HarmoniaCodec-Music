@@ -1,0 +1,18 @@
+{
+ "recordings": [
+  {
+   "path": "data/singer1/take01.wav",
+   "features": "data/singer1/take01.feat.npz",
+   "rights": "own",
+   "consent_doc_sha256": "<sha256 of your signed consent / ownership document>",
+   "speaker_id": "singer1"
+  },
+  {
+   "path": "data/singer1/take02.wav",
+   "features": "data/singer1/take02.feat.npz",
+   "rights": "own",
+   "consent_doc_sha256": "<sha256>",
+   "speaker_id": "singer1"
+  }
+ ]
+}

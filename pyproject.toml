@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "harmonia-codec-music"
+version = "0.1.0"
+description = "F0-conditioned singing synthesis on the HarmoniaCodec neural codec (research scaffold, no trained weights)"
+readme = "README_MUSIC.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "Lewis James Seals Jr." }]
+dependencies = ["numpy", "scipy"]
+
+[project.optional-dependencies]
+audio = ["soundfile"]
+torch = ["torch", "torchaudio"]
+
+[tool.setuptools]
+py-modules = ["harmonia", "harmonia_neural", "harmonia_signalgen", "harmonia_synth", "harmonia_gate", "train_codec_ae", "train_synth"]

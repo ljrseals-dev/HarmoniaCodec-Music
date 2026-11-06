@@ -1,0 +1,17 @@
+name: ci
+on: [push, pull_request]
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    strategy: { matrix: { python: ["3.10", "3.12"] } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "${{ matrix.python }}" }
+      - run: pip install numpy scipy
+      - run: python harmonia.py selftest --expanded
+      - run: python harmonia_signalgen.py
+      - run: python -m unittest discover -s tests
+      - run: python tools/model_status.py --no-fail
+      - run: python -m py_compile harmonia_synth.py train_codec_ae.py train_synth.py harmonia_neural.py
+# Torch tests (streaming equivalence) are intentionally not run here: they currently fail by design (see TRAINING.md).
