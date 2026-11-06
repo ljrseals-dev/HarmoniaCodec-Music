@@ -174,6 +174,26 @@ def test_encoder_streaming():
     return failures
 
 
+def test_causal_transposed_conv_output_length_and_reset():
+    print("\\n[CausalTransposedConv1d] output length and reset")
+    failures = []
+    for kernel, stride, dilation in ((3, 1, 1), (5, 2, 1), (11, 5, 1), (15, 7, 1), (7, 3, 2)):
+        m = CausalTransposedConv1d(4, 4, kernel, stride=stride, dilation=dilation)
+        x = torch.randn(1, 4, 37)
+        m.reset()
+        with torch.no_grad():
+            y_first = m(x).clone()
+        if y_first.shape[-1] != x.shape[-1] * stride:
+            failures.append((kernel, stride, dilation, "wrong output length", y_first.shape[-1]))
+        m.reset()
+        with torch.no_grad():
+            y_reset = m(x).clone()
+        if not torch.allclose(y_first, y_reset, atol=1e-6, rtol=1e-6):
+            failures.append((kernel, stride, dilation, "reset changed first-pass output"))
+    print("  all output lengths and reset checks pass" if not failures else f"  FAIL: {failures}")
+    return failures
+
+
 def test_decoder_streaming():
     print("\n[SubBandDecoderNN] streaming equivalence")
     failures = []
@@ -193,7 +213,7 @@ if __name__ == "__main__":
     for t in [test_causal_conv_streaming, test_causal_conv_length_preserved,
               test_causal_conv_kernel_one, test_causal_transposed_conv_streaming,
               test_residual_unit_streaming, test_focal_modulation_streaming,
-              test_encoder_streaming, test_decoder_streaming]:
+              test_encoder_streaming, test_causal_transposed_conv_output_length_and_reset, test_decoder_streaming]:
         f = t()
         total_failures += len(f)
     print("\n" + "="*72)
