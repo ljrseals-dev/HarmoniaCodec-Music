@@ -1,93 +1,93 @@
 {
- "schema": 1,
- "project": "HarmoniaCodec Music",
- "note": "Status is computed by tools/model_status.py from files on disk; presence of weights is NOT proof of quality.",
- "components": [
-  {
-   "id": "codec_ae",
-   "name": "Codec encoder + decoder (autoencoder pretrain)",
-   "kind": "trainable",
-   "required_for": [
-    "singing"
-   ],
-   "script": "train_codec_ae.py",
-   "command": "python train_codec_ae.py --manifest manifest.json --out checkpoints/codec --steps 100000",
-   "outputs": [
-    "checkpoints/codec/codec_encoder.pt",
-    "checkpoints/codec/codec_decoder.pt"
-   ],
-   "gate_file": "checkpoints/codec/codec_report.json",
-   "gate_key": "improved_over_baseline",
-   "data": "Rights-cleared 24 kHz mono 16-bit PCM singing; see docs/DATA_MANIFEST.md",
-   "depends_on": [],
-   "note": "No GAN loss yet: listen to reconstructions before trusting as teacher."
-  },
-  {
-   "id": "synth_head",
-   "name": "HarmoniaSynth head (phonemes+F0 -> codec latent)",
-   "kind": "trainable",
-   "required_for": [
-    "singing"
-   ],
-   "script": "train_synth.py",
-   "command": "python train_synth.py --manifest manifest.json --codec checkpoints/codec --out checkpoints/synth",
-   "outputs": [
-    "checkpoints/synth/harmonia_synth.pt"
-   ],
-   "gate_file": "checkpoints/synth/synth_eval.json",
-   "gate_key": "canary_pass",
-   "data": "Same recordings plus per-file frame-level features (phon, f0, voiced, loud @120 Hz)",
-   "depends_on": [
-    "codec_ae",
-    "aligner",
-    "f0_tracker"
-   ],
-   "note": "Fingerprint stays 'harmonia_synth_untrained' until harmonia_gate.attest_trained() succeeds."
-  },
-  {
-   "id": "aligner",
-   "name": "Forced aligner (phoneme timings)",
-   "kind": "external",
-   "required_for": [
-    "singing"
-   ],
-   "outputs": [
-    "assets/aligner/READY"
-   ],
-   "fetch": "Install Montreal Forced Aligner (or a singing-aware aligner), align your recordings, then `touch assets/aligner/READY`.",
-   "note": "Not part of this repo. Check the aligner's own model licence."
-  },
-  {
-   "id": "f0_tracker",
-   "name": "F0 tracker weights (RMVPE or CREPE)",
-   "kind": "external",
-   "required_for": [
-    "singing"
-   ],
-   "outputs": [
-    "assets/rmvpe/rmvpe.pt"
-   ],
-   "fetch": "Obtain rmvpe.pt from its upstream release and place it at assets/rmvpe/rmvpe.pt.",
-   "note": "Weights licence not verified by the maintainers. Check before any commercial use."
-  },
-  {
-   "id": "causal_decoder",
-   "name": "Causal (streaming) transposed-conv decoder",
-   "kind": "code_fix",
-   "required_for": [],
-   "fixed": false,
-   "note": "CausalTransposedConv1d fails test_streaming_equivalence.py / test_causal_streaming.py (wrong output length, re-emits overlap). Needs a code fix, not training."
-  },
-  {
-   "id": "neural_codec_full",
-   "name": "Full NeuralHarmonia compression stack (MERVQ)",
-   "kind": "trainable",
-   "required_for": [],
-   "script": "harmonia_neural.py",
-   "blocked_by": "Known Issue #3 in README.md must be fixed before a real run (see Quick start step 6).",
-   "outputs": [],
-   "command": "python harmonia_neural.py train --files ... --steps 500000",
-   "note": "Only needed for the compression use case, not for singing synthesis."
-  }
- ]
+  "schema": 1,
+  "project": "HarmoniaCodec Music",
+  "note": "Status is computed by tools/model_status.py from files on disk; presence of weights is NOT proof of quality.",
+  "components": [
+    {
+      "id": "codec_ae",
+      "name": "Codec encoder + decoder (autoencoder pretrain)",
+      "kind": "trainable",
+      "required_for": [
+        "singing"
+      ],
+      "script": "train_codec_ae.py",
+      "command": "python train_codec_ae.py --manifest manifest.json --out checkpoints/codec --steps 100000",
+      "outputs": [
+        "checkpoints/codec/codec_encoder.pt",
+        "checkpoints/codec/codec_decoder.pt"
+      ],
+      "gate_file": "checkpoints/codec/codec_report.json",
+      "gate_key": "improved_over_baseline",
+      "data": "Rights-cleared 24 kHz mono 16-bit PCM singing; see docs/DATA_MANIFEST.md",
+      "depends_on": [],
+      "note": "No GAN loss yet: listen to reconstructions before trusting as teacher."
+    },
+    {
+      "id": "synth_head",
+      "name": "HarmoniaSynth head (phonemes+F0 -> codec latent)",
+      "kind": "trainable",
+      "required_for": [
+        "singing"
+      ],
+      "script": "train_synth.py",
+      "command": "python train_synth.py --manifest manifest.json --codec checkpoints/codec --out checkpoints/synth",
+      "outputs": [
+        "checkpoints/synth/harmonia_synth.pt"
+      ],
+      "gate_file": "checkpoints/synth/synth_eval.json",
+      "gate_key": "canary_pass",
+      "data": "Same recordings plus per-file frame-level features (phon, f0, voiced, loud @120 Hz)",
+      "depends_on": [
+        "codec_ae",
+        "aligner",
+        "f0_tracker"
+      ],
+      "note": "Fingerprint stays 'harmonia_synth_untrained' until harmonia_gate.attest_trained() succeeds."
+    },
+    {
+      "id": "aligner",
+      "name": "Forced aligner (phoneme timings)",
+      "kind": "external",
+      "required_for": [
+        "singing"
+      ],
+      "outputs": [
+        "assets/aligner/READY"
+      ],
+      "fetch": "Install Montreal Forced Aligner (or a singing-aware aligner), align your recordings, then `touch assets/aligner/READY`.",
+      "note": "Not part of this repo. Check the aligner's own model licence."
+    },
+    {
+      "id": "f0_tracker",
+      "name": "F0 tracker weights (RMVPE or CREPE)",
+      "kind": "external",
+      "required_for": [
+        "singing"
+      ],
+      "outputs": [
+        "assets/rmvpe/rmvpe.pt"
+      ],
+      "fetch": "Obtain rmvpe.pt from its upstream release and place it at assets/rmvpe/rmvpe.pt.",
+      "note": "Weights licence not verified by the maintainers. Check before any commercial use."
+    },
+    {
+      "id": "causal_decoder",
+      "name": "Causal (streaming) transposed-conv decoder",
+      "kind": "code_fix",
+      "required_for": [],
+      "fixed": false,
+      "note": "Candidate output-overlap-add repair committed on fix/causal-transposed-conv-streaming. fixed remains false until test_streaming_equivalence.py and test_causal_streaming.py pass on the branch."
+    },
+    {
+      "id": "neural_codec_full",
+      "name": "Full NeuralHarmonia compression stack (MERVQ)",
+      "kind": "trainable",
+      "required_for": [],
+      "script": "harmonia_neural.py",
+      "blocked_by": "Known Issue #3 in README.md must be fixed before a real run (see Quick start step 6).",
+      "outputs": [],
+      "command": "python harmonia_neural.py train --files ... --steps 500000",
+      "note": "Only needed for the compression use case, not for singing synthesis."
+    }
+  ]
 }
